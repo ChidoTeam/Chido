@@ -47,8 +47,8 @@ ext {
     libVersionName = '1.0.0'
     libPomUrl = 'https://github.com/ChidoTeam/Chido'
     libGithubRepo = 'ChidoTeam/Chido'
-    libModuleName = 'Chido'
+    libModuleName = 'chido-chido'
     libModuleDesc = 'Android library for transfer of airtime'
-    libBintrayName = 'Chido'
+    libBintrayName = 'chido-chido'
 
 }
