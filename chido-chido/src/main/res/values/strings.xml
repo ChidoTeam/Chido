@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">chido-chido</string>
+    <string name="send_airtime">Send Airtime</string>
+    <string name="enter_phone_number">Enter Phone Number</string>
+    <string name="enter_amount">Enter Amount</string>
+    <string name="proceed">Proceed</string>
+</resources>
