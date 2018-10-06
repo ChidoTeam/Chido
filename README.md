@@ -1,4 +1,5 @@
-**PAYLEO Payments Gateway Android SDK***
+# Chido
+for airtime transfer
 
 [![](https://jitpack.io/v/ChidoTeam/chido.svg)](https://jitpack.io/#ChidoTeam/chido)
 
