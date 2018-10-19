@@ -1,5 +1,6 @@
 package chido.com.chido_chido;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
@@ -22,7 +23,8 @@ public class WebService extends AsyncTask<String, Void, String> {
     String server_response;
     private Intent callIntent;
     private AppCompatActivity activity;
-    private String ussdString, amount, phoneNumber;
+    private ServerResponseObject serverResponseObject;
+    private String amount, phoneNumber;
     ProgressDialog progressDialog;
 
     public WebService(Intent callIntent, AppCompatActivity activity, String phoneNumber, String amount) {
@@ -31,6 +33,13 @@ public class WebService extends AsyncTask<String, Void, String> {
         this.activity = activity;
         this.amount = amount;
         this.phoneNumber = phoneNumber;
+        progressDialog = new ProgressDialog(activity);
+        progressDialog.setTitle("Progress");
+        progressDialog.setMessage("Loading...");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        serverResponseObject = new ServerResponseObject();
+
 
     }
 
@@ -49,7 +58,8 @@ public class WebService extends AsyncTask<String, Void, String> {
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestProperty("Content-Type", "application/json");
             urlConnection.setRequestMethod("POST");
-            urlConnection.setRequestProperty("Authorization", "someAuthString");
+            urlConnection.setRequestProperty("authorization", "Basic MjU2NzE1NzI2Mjg3OmphbTE5ODk=");
+            urlConnection.setRequestProperty("Connection", "close");
             if (postData != null) {
                 OutputStreamWriter writer = new OutputStreamWriter(urlConnection.getOutputStream());
                 writer.write(postData.toString());
@@ -61,9 +71,14 @@ public class WebService extends AsyncTask<String, Void, String> {
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 server_response = readStream(urlConnection.getInputStream());
                 JSONObject jsonResponse = new JSONObject(server_response);
-                JSONObject payload = jsonResponse.getJSONObject("payload");
-                // ussdString = payload.getString("ussd_string")+ amount + "#";
-                ussdString = payload.getString("ussd_string");
+                serverResponseObject.setSuccess(jsonResponse.getBoolean("success"));
+                if(serverResponseObject.isSuccess()){
+                    JSONObject payload = jsonResponse.getJSONObject("payload");
+                    serverResponseObject.setUssdString(payload.getString("ussd_string"));
+                }else{
+                    serverResponseObject.setMessage(jsonResponse.getString("message"));
+                }
+
 
             }
 
@@ -71,6 +86,10 @@ public class WebService extends AsyncTask<String, Void, String> {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+            final AlertDialog alertDialog = new AlertDialog.Builder(activity).create();
+            alertDialog.setTitle("");
+            alertDialog.setMessage("check your internet");
+            alertDialog.show();
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -82,17 +101,22 @@ public class WebService extends AsyncTask<String, Void, String> {
         super.onPostExecute(s);
         progressDialog.dismiss();
         // callIntent = new Intent(Intent.ACTION_CALL, ussdToCallableUri("*100*7*4*0758054848*1000#"));
-        callIntent = new Intent(Intent.ACTION_CALL, ussdToCallableUri(ussdString));
-        activity.startActivity(callIntent);
+        if (serverResponseObject.isSuccess() ) {
+            callIntent = new Intent(Intent.ACTION_CALL, ussdToCallableUri(serverResponseObject.getUssdString()));
+            activity.startActivity(callIntent);
+        }else{
+            final AlertDialog alertDialog = new AlertDialog.Builder(activity).create();
+            alertDialog.setTitle("Error");
+            alertDialog.setMessage(serverResponseObject.getMessage());
+            alertDialog.show();
+        }
 
 
     }
 
     @Override
     protected void onPreExecute() {
-        progressDialog = ProgressDialog.show(activity,
-                "Progress",
-                "Loading...");
+        progressDialog.show();
     }
 
 

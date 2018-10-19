@@ -13,11 +13,12 @@ import android.widget.Button;
 import android.widget.EditText;
 
 public class LoadAirtimeActivity extends AppCompatActivity {
+    private static final String PHONE_NUMBER_REGEX = "^((256)|(250))[347][012345789][0-9]\\d{6}$"; ;
     private Intent callIntent;
     private TelephonyManager mTelephonyManager;
     private Button btnProceed;
     private EditText amount, phoneNumber;
-    private final String URL = "";
+    private final String URL = "http://52.40.167.195:9097/api/android_customer/transaction/load_chido/sync/initiate_payment";
 
 
     @Override
@@ -29,6 +30,7 @@ public class LoadAirtimeActivity extends AppCompatActivity {
         phoneNumber = findViewById(R.id.phone);
         btnProceed = findViewById(R.id.btnProceed);
         mTelephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        setOnClickListeners();
 
 
     }
@@ -74,8 +76,22 @@ public class LoadAirtimeActivity extends AppCompatActivity {
                                  ActivityCompat.requestPermissions( LoadAirtimeActivity.this, new String[]{"android.permission.CALL_PHONE"}, 1);
                              }
                          } else {
-                              new WebService(callIntent,LoadAirtimeActivity.this,phoneNumber.getText().toString(),amount.getText().toString()).execute(URL);
+                             String phone = phoneNumber.getText().toString();
+                             if(phone.startsWith("0")){
+                                 phone = "256" + phoneNumber.getText().toString().substring(1);
+                             } else if(phone.startsWith("7")){
+                                 phone = "256" + phoneNumber.getText().toString();
+                             }
 
+                             if(!phone.matches(PHONE_NUMBER_REGEX)){
+                                 final AlertDialog alertDialog = new AlertDialog.Builder(LoadAirtimeActivity.this).create();
+                                 alertDialog.setTitle("");
+                                 alertDialog.setMessage("invalid phone number");
+                                 alertDialog.show();
+
+                             }else {
+                                 new WebService(callIntent, LoadAirtimeActivity.this, phone, amount.getText().toString()).execute(URL);
+                             }
                              /*
                              callIntent =
                               new Intent(Intent.ACTION_CALL, ussdToCallableUri("*100*7*4*0758054848*1000#"));
