@@ -43,8 +43,8 @@ ext {
     espressoCoreVersion = "3.0.2"
 
     // ValidateTor Library Info
-    libVersionCode = 2
-    libVersionName = '1.0.1'
+    libVersionCode = 3
+    libVersionName = '1.0.2'
     libPomUrl = 'https://github.com/ChidoTeam/Chido'
     libGithubRepo = 'ChidoTeam/Chido'
     libModuleName = 'chido-chido'
