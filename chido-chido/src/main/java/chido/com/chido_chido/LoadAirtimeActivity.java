@@ -1,24 +1,44 @@
 package chido.com.chido_chido;
 
+import android.Manifest;
+import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import java.util.List;
 
 public class LoadAirtimeActivity extends AppCompatActivity {
-    private static final String PHONE_NUMBER_REGEX = "^((256)|(250))[347][012345789][0-9]\\d{6}$"; ;
+
+    private static final String TAG = "LoadAirtimeActivity";
+    private static final int CODE_DRAW_OVER_OTHER_APP_PERMISSION = 2084;
     private Intent callIntent;
-    private TelephonyManager mTelephonyManager;
+    private USSDTimer ussdTimer = new USSDTimer(LoadAirtimeActivity.this);
+    ;
     private Button btnProceed;
     private EditText amount, phoneNumber;
+    TelephonyManager mTelephonyManager;
     private final String URL = "http://52.40.167.195:9097/api/android_customer/transaction/load_chido/sync/initiate_payment";
+    private TelephonyInfo telephonyInfo;
 
 
     @Override
@@ -30,29 +50,12 @@ public class LoadAirtimeActivity extends AppCompatActivity {
         phoneNumber = findViewById(R.id.phone);
         btnProceed = findViewById(R.id.btnProceed);
         mTelephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        ChidoUtil.logInstalledAccessiblityServices(LoadAirtimeActivity.this);
         setOnClickListeners();
 
 
+
     }
-
-    private Uri ussdToCallableUri(String ussd) {
-
-        String uriString = "";
-
-        if (!ussd.startsWith("tel:"))
-            uriString += "tel:";
-
-        for (char c : ussd.toCharArray()) {
-
-            if (c == '#')
-                uriString += Uri.encode("#");
-            else
-                uriString += c;
-        }
-
-        return Uri.parse(uriString);
-    }
-
 
     private void setOnClickListeners() {
         //do something after button is pressed
@@ -60,22 +63,59 @@ public class LoadAirtimeActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+                    // check amount
                      if (amount.getText().toString().isEmpty()) {
                          final AlertDialog alertDialog = new AlertDialog.Builder(LoadAirtimeActivity.this).create();
                          alertDialog.setTitle("");
                          alertDialog.setMessage(getString(R.string.enter_amount));
                          alertDialog.show();
+                     // check phone number
                      }else if (phoneNumber.getText().toString().isEmpty()) {
                          final AlertDialog alertDialog = new AlertDialog.Builder(LoadAirtimeActivity.this).create();
                          alertDialog.setTitle("");
                          alertDialog.setMessage(getString(R.string.enter_phone_number));
                          alertDialog.show();
                     } else {
-                         if (ContextCompat.checkSelfPermission( LoadAirtimeActivity.this, "android.permission.CALL_PHONE") != 0) {
-                             if (!ActivityCompat.shouldShowRequestPermissionRationale( LoadAirtimeActivity.this, "android.permission.CALL_PHONE")) {
-                                 ActivityCompat.requestPermissions( LoadAirtimeActivity.this, new String[]{"android.permission.CALL_PHONE"}, 1);
-                             }
+                         //check permissions
+                         if (
+
+                                  ActivityCompat.checkSelfPermission(LoadAirtimeActivity.this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED
+                                 || ActivityCompat.checkSelfPermission(LoadAirtimeActivity.this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED
+                                       //  || ActivityCompat.checkSelfPermission(LoadAirtimeActivity.this, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED
+                                         || ActivityCompat.checkSelfPermission(LoadAirtimeActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED
+                               //          && ActivityCompat.checkSelfPermission(LoadAirtimeActivity.this, Manifest.permission.SYSTEM_ALERT_WINDOW) != PackageManager.PERMISSION_GRANTED
+                           ) {
+
+                          //   if (!ActivityCompat.shouldShowRequestPermissionRationale( LoadAirtimeActivity.this, "android.permission.CALL_PHONE")) {
+                                 ActivityCompat.requestPermissions( LoadAirtimeActivity.this,
+                                         new String[]{Manifest.permission.CALL_PHONE
+                                         ,Manifest.permission.READ_PHONE_STATE
+                                     //    ,Manifest.permission.READ_PHONE_NUMBERS
+                                         ,Manifest.permission.READ_SMS
+                                 //        ,"android.permission.SYSTEM_ALERT_WINDOW"
+                                 }, 1);
+                            // }
+
+
                          } else {
+                             telephonyInfo = TelephonyInfo.getInstance(LoadAirtimeActivity.this);
+
+                             /*
+                             String mPhoneNumber = mTelephonyManager.getLine1Number();
+                             String mPhoneNumber = mTelephonyManager.getCallCapablePhoneAccounts();
+                             String operatorName = mTelephonyManager.getNetworkOperatorName();
+                             String operator = mTelephonyManager.getNetworkOperator();
+                             String simOperator = mTelephonyManager.getSimOperator();
+                             String simOperatorName = mTelephonyManager.getSimOperatorName();
+                             String imeiSIM1 = telephonyInfo.getImsiSIM1();
+                             String imeiSIM2 = telephonyInfo.getImsiSIM2();
+                             boolean isSIM1Ready = telephonyInfo.isSIM1Ready();
+                             boolean isSIM2Ready = telephonyInfo.isSIM2Ready();
+                             boolean isDualSIM = telephonyInfo.isDualSIM();
+                             Log.e("Telephony:",mPhoneNumber + " " + operatorName);
+                             */
+
+                             //format phone number
                              String phone = phoneNumber.getText().toString();
                              if(phone.startsWith("0")){
                                  phone = "256" + phoneNumber.getText().toString().substring(1);
@@ -83,14 +123,49 @@ public class LoadAirtimeActivity extends AppCompatActivity {
                                  phone = "256" + phoneNumber.getText().toString();
                              }
 
-                             if(!phone.matches(PHONE_NUMBER_REGEX)){
+                             String amountString = amount.getText().toString();
+                             // validate phone number
+                             if(!phone.matches(ChidoUtil.PHONE_NUMBER_REGEX)){
                                  final AlertDialog alertDialog = new AlertDialog.Builder(LoadAirtimeActivity.this).create();
                                  alertDialog.setTitle("");
                                  alertDialog.setMessage("invalid phone number");
                                  alertDialog.show();
 
                              }else {
-                                 new WebService(callIntent, LoadAirtimeActivity.this, phone, amount.getText().toString()).execute(URL);
+
+                                 // check for mtn
+                                 if(phone.matches(ChidoUtil.MTN_PHONE_NUMBER_REGEX) || phone.matches(ChidoUtil.MTN_CO_PHONE_NUMBER_REGEX)){
+
+
+                                     //check if accesibility is enabled
+                                     if(isAccessibilityEnabled()){
+
+                                         Log.e(TAG,"USSD sERVICE IS ENABLED");
+
+                                        // ChidoUtil.savePref(ChidoUtil.USSD_PHONE_NUMBER,phone.replaceFirst("256","0"),LoadAirtimeActivity.this);
+                                         ChidoUtil.savePref(ChidoUtil.USSD_AMOUNT,amountString,LoadAirtimeActivity.this);
+                                         startService(new Intent(LoadAirtimeActivity.this, USSDService.class));
+                                         fetchAndStartUssd( phone, amountString);
+                                     }else{
+                                         new AlertDialog.Builder(LoadAirtimeActivity.this)
+                                                 .setTitle("Enable Service!")
+                                                 .setMessage("Please Enable " +ChidoUtil.getApplicationName(LoadAirtimeActivity.this)+ " Airtime Service")
+                                                 .setIcon(android.R.drawable.ic_dialog_alert)
+                                                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+                                                     public void onClick(DialogInterface dialog, int whichButton) {
+                                                         openAccesibilityService();
+                                                     }})
+                                                 .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+
+                                                     public void onClick(DialogInterface dialog, int whichButton) {
+                                                         openAccesibilityService();
+                                                     }}).show();
+                                     }
+                                 }else{
+                                     fetchAndStartUssd( phone,amountString);
+                                 }
+
                              }
                              /*
                              callIntent =
@@ -104,6 +179,62 @@ public class LoadAirtimeActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    public boolean isAccessibilityEnabled() {
+        AccessibilityManager am = (AccessibilityManager)getSystemService(Context.ACCESSIBILITY_SERVICE);
+
+        List<AccessibilityServiceInfo> runningServices = am
+                .getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
+        for (AccessibilityServiceInfo service : runningServices) {
+            if (ChidoUtil.USSDServiceID.equals(service.getId())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void fetchAndStartUssd(String phone,String amount){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+
+            //If the draw over permission is not available open the settings screen
+            //to grant the permission.
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName()));
+            startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION);
+        } else {
+         //   startService(new Intent(LoadAirtimeActivity.this, ProgressService.class));
+        }
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        startService(new Intent(LoadAirtimeActivity.this, USSDService.class));
+        new WebService(callIntent, ussdTimer,LoadAirtimeActivity.this, phone, amount,telephonyInfo).execute(URL);
+    }
+
+    private void openAccesibilityService(){
+        Toast.makeText(this, "Please Enable " +ChidoUtil.getApplicationName(LoadAirtimeActivity.this)+ " Airtime Service", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+        startActivityForResult(intent, 0);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == CODE_DRAW_OVER_OTHER_APP_PERMISSION) {
+
+            //Check if the permission is granted or not.
+            if (resultCode == RESULT_OK) {
+                startService(new Intent(LoadAirtimeActivity.this, ProgressService.class));
+            } else { //Permission is not available
+                Toast.makeText(this,
+                        "Draw over other app permission not available. Closing the application",
+                        Toast.LENGTH_SHORT).show();
+
+                finish();
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
 }
