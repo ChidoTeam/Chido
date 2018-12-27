@@ -7,9 +7,33 @@
     android:background="@color/colorPrimary"
     android:orientation="vertical">
 
+    <TextView
+        android:id="@+id/close"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:text="X"
+        android:paddingLeft="@dimen/space50"
+        android:paddingBottom="@dimen/space50"
+        android:paddingRight="10dp"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:layout_alignParentRight="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/progress"
+        android:layout_centerHorizontal="true"
+        android:text="Processing your request, please wait..."
+        android:textColor="@color/white" />
+
     <ProgressBar
-        android:layout_width="@dimen/space50"
-        android:layout_height="@dimen/space50"
+        android:id="@+id/progress"
+        android:layout_width="@dimen/space80"
+        android:layout_height="@dimen/space80"
+        android:indeterminateDrawable="@drawable/progress"
         android:layout_centerInParent="true" />
 
 

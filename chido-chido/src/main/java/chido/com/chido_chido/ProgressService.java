@@ -11,6 +11,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 public class ProgressService extends Service {
 
@@ -50,6 +51,14 @@ public class ProgressService extends Service {
         //Add the view to the window
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         mWindowManager.addView(mChatHeadView, params);
+        TextView closeButton = (TextView) mChatHeadView.findViewById(R.id.close);
+        closeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //close the service and remove the chat head from the window
+                stopSelf();
+            }
+        });
     }
 
     @Override

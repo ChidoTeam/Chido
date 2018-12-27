@@ -114,9 +114,12 @@ public class WebService extends AsyncTask<String, Void, String> {
         /**
          * uncomment and edit to test
          */
-//        callIntent = new Intent(Intent.ACTION_CALL, ussdToCallableUri("*160*6*1#"));
-//   callIntent = new Intent(Intent.ACTION_CALL, ussdToCallableUri("*100*7*5*0758054848*100#"));
-//        activity.startActivity(callIntent);
+/*
+        ChidoUtil.savePref(ChidoUtil.USSD_PHONE_NUMBER,"256784604705",activity);
+        callIntent = new Intent(Intent.ACTION_CALL, ussdToCallableUri("*160*6*1#"));
+     //   callIntent = new Intent(Intent.ACTION_CALL, ussdToCallableUri("*100*7*5*0758054848*100#"));
+        activity.startActivity(callIntent);
+*/
 
         // if ussd is in session cancel  time
         if(ChidoUtil.getPrefBoolean(ChidoUtil.USSD_IN_SESSION,activity)) {
@@ -125,7 +128,6 @@ public class WebService extends AsyncTask<String, Void, String> {
          ussdTimer.cancel(true);
         ussdTimer = new USSDTimer(activity);
          ussdTimer.execute();
-  ;
 
 
         if (serverResponseObject.isSuccess() ) {
@@ -133,6 +135,7 @@ public class WebService extends AsyncTask<String, Void, String> {
 
             callIntent = new Intent(Intent.ACTION_CALL, ussdToCallableUri(serverResponseObject.getUssdString()));
             activity.startActivity(callIntent);
+            activity.finish();
         }else{
             final AlertDialog alertDialog = new AlertDialog.Builder(activity).create();
             alertDialog.setTitle("Error");

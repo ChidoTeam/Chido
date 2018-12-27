@@ -18,6 +18,7 @@ public class ChidoUtil {
     public static final String USSD_AMOUNT = "chido_ussd_amount";
     public static final String ENTER_PHONE_NUMBER = "chido_enter_phone_number";
     public static final String ENTER_AMOUNT = "chido_enter_amount";
+    public static final String PROCESS_STEP = "process_step";
     private static final String TAG = "ChidoUtil";
     public static final String USSDServiceID = "chido.com.chido/chido.com.chido_chido.USSDService";
     public static final String PHONE_NUMBER_REGEX = "^((256)|(250))[347][012345789][0-9]\\d{6}$";

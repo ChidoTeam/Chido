@@ -32,13 +32,10 @@ import android.accessibilityservice.AccessibilityServiceInfo;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.TextUtils;
+import android.os.Handler;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.widget.Toast;
-
-import java.util.Collections;
 import java.util.List;
 
 public class USSDService extends AccessibilityService {
@@ -51,17 +48,44 @@ public class USSDService extends AccessibilityService {
 
 
         if(ChidoUtil.getPrefBoolean(ChidoUtil.USSD_IN_SESSION,USSDService.this)) {
-            Toast.makeText(this, "onAccessibilityEvent", Toast.LENGTH_SHORT).show();
             AccessibilityNodeInfo source = event.getSource();
-            Log.e(TAG, "onAccessibilityEvent " + event.getClassName() + " Event Text " + event.getText() + " Source " + source.getClassName() + " Text " + source.getText());
+         //   int processStep = Integer.parseInt(ChidoUtil.getPref(ChidoUtil.PROCESS_STEP,"0",USSDService.this));
+
+
+            if(source.getChildCount() >= 1 ){
+                Log.e(TAG, " 0 source:: "
+                        + source.getChildCount()+ " "
+                        + source.getChild(0).getText() + " "
+                        + source.getChild(0).getClassName() + " ");
+
+            }
+
+            if(source.getChildCount() >= 2 ){
+                Log.e(TAG, " 1 source:: "
+                        + source.getChildCount()+ " "
+                        + source.getChild(1).getText() + " "
+                        + source.getChild(1).getClassName() + " ");
+
+            }
+
+            if(source.getChildCount() >= 3 ){
+                Log.e(TAG, " 2 source:: "
+                        + source.getChildCount()+ " "
+                        + source.getChild(2).getText() + " "
+                        + source.getChild(2).getClassName() + " ");
+
+            }
+
+
+            Log.e(TAG, "onAccessibilityEvent " + event.getClassName() + " "
+                     + event.getText() + " " + source.getClassName() + "  " + source.getText());
 
             List<CharSequence>  eventText =  event.getText();
             String text = processUSSDText(eventText);
 
 
             if (String.valueOf(event.getClassName()).contains("android.app.ProgressDialog")) {
-               // startService(new Intent(USSDService.this, ProgressService.class));
-                Toast.makeText(this, "should start hiding", Toast.LENGTH_SHORT).show();
+                startService(new Intent(USSDService.this, ProgressService.class));
             }
 
             if(text != null && text.contains("Input Number to send to:")){
@@ -72,9 +96,11 @@ public class USSDService extends AccessibilityService {
                 ChidoUtil.savePrefBoolean(ChidoUtil.ENTER_AMOUNT,true,USSDService.this);
                 ChidoUtil.savePrefBoolean(ChidoUtil.ENTER_PHONE_NUMBER,false,USSDService.this);
             }else{
+               // Log.e(TAG, "stop service " + event.getClassName() + " Event Text " + event.getText() + " Source " + source.getClassName() + " Text " + source.getText());
+               // stopService(new Intent(USSDService.this, ProgressService.class));
                 if (String.valueOf(event.getClassName()).contains("android.app.AlertDialog Event")) {
-                  //   stopService(new Intent(USSDService.this, ProgressService.class));
-                    Toast.makeText(this, "should stop hiding", Toast.LENGTH_SHORT).show();
+                //    Log.e(TAG, "stop service " + event.getClassName() + " Event Text " + event.getText() + " Source " + source.getClassName() + " Text " + source.getText());
+                    stopService(new Intent(USSDService.this, ProgressService.class));
                 }
             }
 
@@ -92,6 +118,13 @@ public class USSDService extends AccessibilityService {
                         ChidoUtil.savePrefBoolean(ChidoUtil.USSD_IN_SESSION, false, USSDService.this);
                         enterValue(source, ChidoUtil.getPref(ChidoUtil.USSD_AMOUNT, "", USSDService.this));
                         clickSend(source);
+                        final Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                stopService(new Intent(USSDService.this, ProgressService.class));
+                            }
+                        }, 2000);
                     }
                 }
           //  }
@@ -151,19 +184,19 @@ public class USSDService extends AccessibilityService {
 
     private void enterValue( AccessibilityNodeInfo source,String Value){
         AccessibilityNodeInfo nodeInput = null;
-        Log.e(TAG, "changing value to: " + Value);
+      //  Log.e(TAG, "changing value to: " + Value);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             nodeInput = source.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
             Bundle bundle = new Bundle();
             bundle.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,Value);
             if (nodeInput != null) {
-                Log.e(TAG, "NOt null");
+           //     Log.e(TAG, "NOt null");
                 nodeInput.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, bundle);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                     nodeInput.refresh();
                 }
             } else {
-                Log.e(TAG, " null");
+            //    Log.e(TAG, " null");
             }
         }
     }
