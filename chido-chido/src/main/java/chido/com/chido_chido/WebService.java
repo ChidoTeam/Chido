@@ -94,14 +94,16 @@ public class WebService extends AsyncTask<String, Void, String> {
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
+            serverResponseObject.setSuccess(false);
+            serverResponseObject.setMessage("an error occured");
         } catch (IOException e) {
             e.printStackTrace();
-            final AlertDialog alertDialog = new AlertDialog.Builder(activity).create();
-            alertDialog.setTitle("");
-            alertDialog.setMessage("check your internet");
-            alertDialog.show();
+            serverResponseObject.setSuccess(false);
+            serverResponseObject.setMessage("check your internet connection");
         } catch (JSONException e) {
             e.printStackTrace();
+            serverResponseObject.setSuccess(false);
+            serverResponseObject.setMessage("an error occured");
         }
         return null;
     }
@@ -138,7 +140,7 @@ public class WebService extends AsyncTask<String, Void, String> {
             activity.finish();
         }else{
             final AlertDialog alertDialog = new AlertDialog.Builder(activity).create();
-            alertDialog.setTitle("Error");
+            alertDialog.setTitle("Ooops!");
             alertDialog.setMessage(serverResponseObject.getMessage());
             alertDialog.show();
         }

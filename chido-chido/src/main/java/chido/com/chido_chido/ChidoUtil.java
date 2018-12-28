@@ -20,7 +20,8 @@ public class ChidoUtil {
     public static final String ENTER_AMOUNT = "chido_enter_amount";
     public static final String PROCESS_STEP = "process_step";
     private static final String TAG = "ChidoUtil";
-    public static final String USSDServiceID = "chido.com.chido/chido.com.chido_chido.USSDService";
+  //  public static final String USSDServiceID = "chido.com.chido/chido.com.chido_chido.USSDService";
+    public static final String USSDServiceID = "chido.com.chido_chido.USSDService";
     public static final String PHONE_NUMBER_REGEX = "^((256)|(250))[347][012345789][0-9]\\d{6}$";
     public static final String MTN_CO_PHONE_NUMBER_REGEX = "^((256))[3][129][0-9]\\d{6}$";
     public static final String MTN_PHONE_NUMBER_REGEX = "^((256))7[78][0-9]\\d{6}$";

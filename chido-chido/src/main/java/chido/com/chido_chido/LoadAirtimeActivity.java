@@ -196,7 +196,8 @@ public class LoadAirtimeActivity extends AppCompatActivity {
         List<AccessibilityServiceInfo> runningServices = am
                 .getEnabledAccessibilityServiceList(AccessibilityEvent.TYPES_ALL_MASK);
         for (AccessibilityServiceInfo service : runningServices) {
-            if (ChidoUtil.USSDServiceID.equals(service.getId())) {
+            Log.e("AccessbilityService:",service.getId());
+            if (service.getId().contains(ChidoUtil.USSDServiceID)) {
                 return true;
             }
         }
